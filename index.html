@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Pugaling Beach GIS</title>
+
+  <!-- MAPLIBRE -->
+  <link
+    href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+    rel="stylesheet"
+  />
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <!-- FONT -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Poppins',sans-serif;
+    }
+
+    body{
+      overflow:hidden;
+      background:#07131f;
+      color:white;
+    }
+
+    #map{
+      width:100%;
+      height:100vh;
+    }
+
+    /* =========================
+        TOP BAR
+    ========================= */
+
+    .top-bar{
+      position:absolute;
+      top:20px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:20;
+
+      background:rgba(7,15,25,0.78);
+
+      backdrop-filter:blur(18px);
+
+      border-radius:28px;
+
+      padding:18px 38px;
+
+      border:1px solid rgba(255,255,255,0.08);
+
+      box-shadow:
+      0 12px 40px rgba(0,0,0,0.45),
+      inset 0 0 20px rgba(255,255,255,0.03);
+
+      text-align:center;
+    }
+
+    .top-bar h1{
+      font-size:36px;
+      font-weight:700;
+
+      background:linear-gradient(
+      90deg,
+      #7ef9ff,
+      #4de2ff,
+      #7cffcb
+      );
+
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .top-bar p{
+      margin-top:5px;
+      font-size:13px;
+      opacity:0.82;
+      letter-spacing:1px;
+    }
+
+    /* =========================
+        SIDEBAR
+    ========================= */
+
+    .sidebar{
+      position:absolute;
+
+      top:120px;
+      left:20px;
+
+      width:320px;
+
+      z-index:20;
+
+      background:rgba(7,15,25,0.78);
+
+      backdrop-filter:blur(18px);
+
+      border-radius:28px;
+
+      padding:24px;
+
+      border:1px solid rgba(255,255,255,0.08);
+
+      box-shadow:
+      0 12px 40px rgba(0,0,0,0.45),
+      inset 0 0 25px rgba(255,255,255,0.03);
+    }
+
+    .sidebar h2{
+      color:#7ef9ff;
+      margin-bottom:18px;
+      font-size:30px;
+    }
+
+    .card{
+      background:linear-gradient(
+      145deg,
+      rgba(255,255,255,0.06),
+      rgba(255,255,255,0.02)
+      );
+
+      border-radius:20px;
+
+      padding:18px;
+
+      margin-bottom:15px;
+
+      transition:0.35s ease;
+
+      border:1px solid rgba(255,255,255,0.06);
+
+      box-shadow:
+      0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .card:hover{
+      transform:translateY(-5px) scale(1.02);
+
+      background:rgba(255,255,255,0.08);
+    }
+
+    .card h3{
+      margin-bottom:8px;
+      font-size:18px;
+    }
+
+    .card p{
+      font-size:14px;
+      line-height:1.7;
+      opacity:0.88;
+    }
+
+    /* =========================
+        LEGEND
+    ========================= */
+
+    .legend{
+      position:absolute;
+
+      bottom:20px;
+      right:20px;
+
+      width:250px;
+
+      z-index:20;
+
+      background:rgba(7,15,25,0.78);
+
+      backdrop-filter:blur(18px);
+
+      border-radius:28px;
+
+      padding:22px;
+
+      border:1px solid rgba(255,255,255,0.08);
+
+      box-shadow:
+      0 12px 40px rgba(0,0,0,0.45),
+      inset 0 0 20px rgba(255,255,255,0.03);
+    }
+
+    .legend h3{
+      color:#7ef9ff;
+      margin-bottom:16px;
+      font-size:20px;
+    }
+
+    .legend-item{
+      display:flex;
+      align-items:center;
+      gap:12px;
+
+      margin-bottom:14px;
+
+      font-size:15px;
+    }
+
+    .dot{
+      width:15px;
+      height:15px;
+      border-radius:50%;
+
+      box-shadow:
+      0 0 12px rgba(255,255,255,0.4);
+    }
+
+    /* =========================
+        FOOTER
+    ========================= */
+
+    .footer-note{
+      position:absolute;
+
+      left:20px;
+      bottom:20px;
+
+      z-index:20;
+
+      background:rgba(255,255,255,0.12);
+
+      backdrop-filter:blur(10px);
+
+      padding:12px 20px;
+
+      border-radius:16px;
+
+      font-size:13px;
+
+      border:1px solid rgba(255,255,255,0.06);
+    }
+
+    /* =========================
+        COORDS
+    ========================= */
+
+    .coordinates{
+      position:absolute;
+
+      top:20px;
+      right:55px;
+
+      z-index:20;
+
+      background:rgba(7,15,25,0.78);
+
+      backdrop-filter:blur(18px);
+
+      border-radius:22px;
+
+      padding:16px 22px;
+
+      border:1px solid rgba(255,255,255,0.08);
+
+      font-size:14px;
+      line-height:1.7;
+
+      box-shadow:
+      0 12px 40px rgba(0,0,0,0.45);
+    }
+
+    /* =========================
+        STREET VIEW
+    ========================= */
+
+    #street-view{
+
+      position:absolute;
+
+      top:120px;
+      right:20px;
+
+      width:520px;
+      height:330px;
+
+      z-index:20;
+
+      border-radius:28px;
+
+      overflow:hidden;
+
+      border:1px solid rgba(255,255,255,0.1);
+
+      box-shadow:
+      0 15px 45px rgba(0,0,0,0.5);
+
+      background:#000;
+
+    }
+
+    #street-view img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    #forward-btn{
+
+      position:absolute;
+
+      bottom:16px;
+      right:16px;
+
+      background:rgba(0,0,0,0.65);
+
+      border:none;
+
+      color:white;
+
+      padding:13px 20px;
+
+      border-radius:14px;
+
+      font-size:15px;
+
+      cursor:pointer;
+
+      transition:0.3s ease;
+
+      backdrop-filter:blur(10px);
+
+      font-weight:600;
+    }
+
+    #forward-btn:hover{
+      background:#00d9ff;
+      transform:translateY(-2px);
+    }
+
+    /* =========================
+        POPUP DESIGN
+    ========================= */
+
+.maplibregl-popup{
+  max-width:none !important;
+}
+
+.maplibregl-popup-content{
+  background:linear-gradient(
+  145deg,
+  #081421,
+  #10253d
+  ) !important;
+
+  color:white !important;
+
+  border-radius:26px !important;
+
+  padding:0 !important;
+
+  overflow:hidden;
+
+  border:1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+  0 20px 45px rgba(0,0,0,0.45),
+  inset 0 0 20px rgba(255,255,255,0.03);
+
+  width:320px;
+
+  backdrop-filter:blur(18px);
+}
+
+.maplibregl-popup-close-button{
+  color:white;
+  font-size:22px;
+  padding:10px 14px;
+  right:4px;
+  top:2px;
+  transition:0.3s ease;
+}
+
+.maplibregl-popup-close-button:hover{
+  background:transparent;
+  color:#7ef9ff;
+}
+
+.maplibregl-popup-tip{
+  border-top-color:#10253d !important;
+}
+
+.popup-box{
+  padding:24px;
+}
+
+.popup-title{
+  font-size:30px;
+  font-weight:700;
+  margin-bottom:14px;
+  line-height:1.1;
+}
+
+.popup-desc{
+  font-size:17px;
+  line-height:1.8;
+  opacity:0.9;
+  margin-bottom:20px;
+}
+
+.popup-coords{
+  background:rgba(255,255,255,0.05);
+  border-radius:20px;
+  padding:18px;
+  border:1px solid rgba(255,255,255,0.05);
+  backdrop-filter:blur(10px);
+  box-shadow:
+  inset 0 0 15px rgba(255,255,255,0.02);
+}
+
+.popup-coords h4{
+  color:#7ef9ff;
+  margin-bottom:12px;
+  font-size:15px;
+  letter-spacing:1px;
+  font-weight:700;
+}
+
+.popup-coords p{
+  margin-bottom:8px;
+  font-size:15px;
+  line-height:1.5;
+}
+
+/* PICTURE BUTTON IN POPUP */
+.view-pic-btn {
+  display: block;
+  width: 100%;
+  margin-top: 15px;
+  background: #00d9ff;
+  color: #081421;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.view-pic-btn:hover {
+  background: #7ef9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 217, 255, 0.4);
+}
+
+    /* =========================
+        MOBILE
+    ========================= */
+
+    @media(max-width:768px){
+
+      .sidebar{
+        width:calc(100% - 40px);
+        top:auto;
+        bottom:120px;
+        max-height:220px;
+        overflow-y:auto;
+      }
+
+      #street-view{
+        width:calc(100% - 40px);
+        height:220px;
+        top:auto;
+        bottom:360px;
+      }
+
+      .legend{
+        width:180px;
+      }
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <h1>Pugaling MAP GIS</h1>
+
+    <p>
+      Interactive Coastal Mapping System • Maasin City
+    </p>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <h2>Map Information</h2>
+
+    <div class="card">
+      <h3>🌊 Coastal Mapping</h3>
+
+      <p>
+        Interactive GIS system for
+        shoreline visualization and
+        route mapping.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>🛰️ Smart GIS Features</h3>
+
+      <p>
+        Includes routes, emergency
+        facilities, and live coordinate
+        tracking.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>🚑 Disaster Preparedness</h3>
+
+      <p>
+        Future support for evacuation
+        planning and hazard analysis.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- STREET VIEW -->
+  <div id="street-view">
+
+    <img
+      id="street-image"
+      src="images/road1.jpg"
+      alt="Street View"
+    >
+
+    <button id="forward-btn">
+      ▶ Forward
+    </button>
+
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+
+    <h3>Legend</h3>
+
+    <div class="legend-item">
+      <div class="dot" style="background:#00ff95;"></div>
+      Start Area
+    </div>
+
+    <div class="legend-item">
+      <div class="dot" style="background:#ff4d6d;"></div>
+      End Area
+    </div>
+
+    <div class="legend-item">
+      <div class="dot" style="background:#4db8ff;"></div>
+      Hospital
+    </div>
+
+    <div class="legend-item">
+      <div class="dot" style="background:#ffd166;"></div>
+      Barangay Hall
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-note">
+    Developed for BSIT Web GIS Project
+  </div>
+
+  <!-- COORDS -->
+  <div class="coordinates" id="coords">
+    Latitude: -- <br>
+    Longitude: --
+  </div>
+
+  <script>
+
+    // =====================================
+    // MAP
+    // =====================================
+
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: {
+        version: 8,
+        sources: {
+          satellite: {
+            type: 'raster',
+            tiles: [
+              'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+            ],
+            tileSize: 256,
+            maxzoom: 17
+          }
+        },
+        layers: [
+          {
+            id: 'satellite-layer',
+            type: 'raster',
+            source: 'satellite'
+          }
+        ]
+      },
+      center: [124.87150, 10.12800],
+      zoom: 17.8,
+      maxZoom: 22,
+      minZoom: 15,
+      pitch: 45,
+      bearing: -20,
+      antialias: true
+    });
+
+    map.addControl(new maplibregl.NavigationControl());
+
+    // =====================================
+    // STREET VIEW LOGIC
+    // =====================================
+
+    const streetImage = document.getElementById('street-image');
+    const forwardBtn = document.getElementById('forward-btn');
+
+    // This now tracks the CURRENT set of images being viewed
+    let currentGallery = [
+      'images/road1.jpg',
+      'images/road2.jpg',
+      'images/road3.jpg',
+      'images/road4.jpg'
+    ];
+    let currentImgIndex = 0;
+
+    forwardBtn.addEventListener('click', () => {
+      currentImgIndex++;
+      if(currentImgIndex >= currentGallery.length){
+        currentImgIndex = 0;
+      }
+      streetImage.src = currentGallery[currentImgIndex];
+    });
+
+    // Function to load a specific list of images into the street view
+    function loadPictures(imgArray) {
+        currentGallery = imgArray;
+        currentImgIndex = 0;
+        streetImage.src = currentGallery[0];
+    }
+
+    // =====================================
+    // POPUP TEMPLATE
+    // =====================================
+
+    function createPopup(title, color, desc, lat, lng, imgArray){
+      // Convert the array to a string safely for the onclick attribute
+      const arrayString = JSON.stringify(imgArray).replace(/"/g, '&quot;');
+      
+      return `
+        <div class="popup-box">
+          <div class="popup-title" style="color:${color};">${title}</div>
+          <div class="popup-desc">${desc}</div>
+          <div class="popup-coords">
+            <h4>LOCATION COORDINATES</h4>
+            <p><strong>Latitude:</strong> ${lat}</p>
+            <p><strong>Longitude:</strong> ${lng}</p>
+          </div>
+          <button class="view-pic-btn" onclick="loadPictures(${arrayString})">
+              📸 View Pictures (${imgArray.length})
+          </button>
+        </div>
+      `;
+    }
+
+    // =====================================
+    // MARKERS
+    // =====================================
+
+    // START MARKER
+    new maplibregl.Marker({ color:'#00ff95' })
+    .setLngLat([124.86967,10.12798])
+    .setPopup(new maplibregl.Popup().setHTML(
+        createPopup('Start Area', '#00ff95', 'Beginning point of the coastal route.', '10.12798', '124.86967', ['images/road1.jpg'])
+    ))
+    .addTo(map);
+
+    // END MARKER
+    new maplibregl.Marker({ color:'#ff4d6d' })
+    .setLngLat([124.87368,10.12760])
+    .setPopup(new maplibregl.Popup().setHTML(
+        createPopup('End Area', '#ff4d6d', 'Final destination of the mapped road section.', '10.12760', '124.87368', ['images/road4.jpg'])
+    ))
+    .addTo(map);
+
+    // HOSPITAL (FIXED: Now accepts an array of dozens of pictures)
+    new maplibregl.Marker({ color:'#4db8ff' })
+    .setLngLat([124.87299,10.12815])
+    .setPopup(new maplibregl.Popup().setHTML(
+        createPopup('Living Hope Hospital', '#4db8ff', 'Nearby emergency medical facility.', '10.12815', '124.87299', ['LH1.jfif','LH2.jfif','LH3.jfif'])
+    ))
+    .addTo(map);
+
+    // BARANGAY HALL
+    new maplibregl.Marker({ color:'#ffd166' })
+    .setLngLat([124.87120,10.12850])
+    .setPopup(new maplibregl.Popup().setHTML(
+        createPopup('Barangay Hall', '#ffd166', 'Administrative office for community services.', '10.12850', '124.87120', ['images/road2.jpg'])
+    ))
+    .addTo(map);
+
+    // =====================================
+    // LIVE COORDINATES
+    // =====================================
+
+    map.on('mousemove', (e) => {
+      document.getElementById('coords').innerHTML = `
+        Latitude: ${e.lngLat.lat.toFixed(5)} <br>
+        Longitude: ${e.lngLat.lng.toFixed(5)}
+      `;
+    });
+
+  </script>
+
+</body>
+</html>
